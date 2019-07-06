@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func TestParseCronMaskExpression(t *testing.T) {
+func TestNewCronMask(t *testing.T) {
 	testCases := []struct {
 		expr    string
 		ts      string

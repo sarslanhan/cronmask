@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+var (
+	validRanges = []struct {
+		start, end int
+	}{
+		{start: 0, end: 59},
+		{start: 0, end: 23},
+		{start: 1, end: 31},
+		{start: 1, end: 12},
+		{start: 0, end: 6},
+	}
+)
+
 type CronMask interface {
 	Matches(t time.Time) bool
 }
@@ -70,9 +82,18 @@ func (c *cronMask) Matches(t time.Time) bool {
 		c.DayOfWeek.Matches(int(utcTS.Weekday()))
 }
 
-func parseCronField(fieldStr string) (cronField, error) {
+func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 	if fieldStr == "*" {
 		return &wildcardCronField{}, nil
+	}
+
+	validateRange := func(i, val int) error {
+		validRange := validRanges[i]
+		if validRange.start <= val && validRange.end >= val {
+			return nil
+		}
+
+		return errors.Errorf("expected %d to be in [%d,%d] range", val, validRange.start, validRange.end)
 	}
 
 	parts := strings.Split(fieldStr, ",")
@@ -88,15 +109,24 @@ func parseCronField(fieldStr string) (cronField, error) {
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 			}
+			if err := validateRange(fieldIdx, parsed); err != nil {
+				return nil, err
+			}
 			fields = append(fields, &constantCronField{Val: parsed})
 		} else if len(possibleRangeFields) == 2 {
 			start, err := strconv.Atoi(possibleRangeFields[0])
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 			}
+			if err := validateRange(fieldIdx, start); err != nil {
+				return nil, err
+			}
 			end, err := strconv.Atoi(possibleRangeFields[1])
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
+			}
+			if err := validateRange(fieldIdx, end); err != nil {
+				return nil, err
 			}
 			fields = append(fields, &rangeCronField{Start: start, End: end})
 		} else {
@@ -116,7 +146,7 @@ func New(expr string) (CronMask, error) {
 
 	var fields [5]cronField
 	for i, p := range parts {
-		field, err := parseCronField(p)
+		field, err := parseCronField(i, p)
 		if err != nil {
 			return nil, err
 		}
