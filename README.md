@@ -7,3 +7,13 @@
 
 # cronmask
 Library that supports cron-like expressions to check if a time fits into a time range
+
+For CRON expressions:
+You can check the tests for what is possible.
+
+**Unsupported features:**
+
+- [Non-standard characters](https://en.wikipedia.org/wiki/Cron#Non-standard_characters)
+- Year field
+- Command section
+- Text representation of the fields "month" and "day of week"

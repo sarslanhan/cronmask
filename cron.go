@@ -19,6 +19,8 @@ var (
 	}
 )
 
+// CronMask interface exposes a method to check whether the
+// given time.Time matches the expression CronMask was constructed with.
 type CronMask interface {
 	Matches(t time.Time) bool
 }
@@ -137,6 +139,21 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 	return &listCronField{Parts: fields}, nil
 }
 
+// New constructs a new CronMask instance that can be used to check if a given time.Time
+// matches the expression or not.
+//
+// For CRON expressions:
+// You can check the tests for what is possible.
+//
+// Unsupported features:
+//
+// - Non-standard characters (https://en.wikipedia.org/wiki/Cron#Non-standard_characters)
+//
+// - Year field
+//
+// - Command section
+//
+// - Text representation of the fields "month" and "day of week"
 func New(expr string) (CronMask, error) {
 	parts := strings.Fields(expr)
 
