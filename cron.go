@@ -1,4 +1,4 @@
-package conditions
+package cronmask
 
 import (
 	"github.com/pkg/errors"
