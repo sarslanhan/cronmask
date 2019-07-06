@@ -18,13 +18,13 @@ all: build check
 check: checkfmt test cover
 
 .coverprofile:
-	go test -coverprofile .coverprofile
+	go test -coverprofile .coverage
 
 cover: .coverprofile
-	go tool cover -func .coverprofile
+	go tool cover -func .coverage
 
 showcover: .coverprofile
-	go tool cover -html .coverprofile
+	go tool cover -html .coverage
 
 build:
 	go build ./...
