@@ -177,6 +177,16 @@ func TestNewCronMask(t *testing.T) {
 		{expr: "* a-3 * * *", ts: "2019-07-07T07:00:00Z", isError: true},
 		{expr: "* 2-a * * *", ts: "2019-07-07T07:00:00Z", isError: true},
 		{expr: "* 2-3-5 * * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* 24 * * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* 24-30 * * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* 12-30 * * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "60 * * * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "70 * * * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* * 0 * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* * 32 * *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* * * 0 *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* * * 13 *", ts: "2019-07-07T07:00:00Z", isError: true},
+		{expr: "* * * * 7", ts: "2019-07-07T07:00:00Z", isError: true},
 	}
 
 	for _, tc := range testCases {
