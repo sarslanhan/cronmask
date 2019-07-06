@@ -15,7 +15,7 @@ default: all
 
 all: build check
 
-check: checkfmt test
+check: checkfmt test cover
 
 .coverprofile:
 	go test -coverprofile .coverprofile
