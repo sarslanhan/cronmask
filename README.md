@@ -8,7 +8,10 @@
 # cronmask
 Library that supports cron-like expressions to check if a time fits into a time range
 
-For CRON expressions:
+For [CRON expressions](https://en.wikipedia.org/wiki/Cron#CRON_expression):
+
+Expressions are expected to be in the same time zone as the system that generates the `time.Time` instances.
+
 You can check the tests for what is possible.
 
 **Unsupported features:**

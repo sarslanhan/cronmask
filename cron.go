@@ -141,7 +141,7 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 // New constructs a new CronMask instance that can be used to check if a given time.Time
 // matches the expression or not.
 //
-// For [CRON expressions](https://en.wikipedia.org/wiki/Cron#CRON_expression):
+// For CRON expressions (https://en.wikipedia.org/wiki/Cron#CRON_expression):
 //
 // Expressions are expected to be in the same time zone as the system that generates the time.Time instances.
 //
