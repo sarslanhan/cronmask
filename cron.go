@@ -22,7 +22,7 @@ var (
 // CronMask interface exposes a method to check whether the
 // given time.Time matches the expression CronMask was constructed with.
 type CronMask interface {
-	Matches(t time.Time) bool
+	Match(t time.Time) bool
 }
 
 type cronMask struct {
@@ -34,13 +34,13 @@ type cronMask struct {
 }
 
 type cronField interface {
-	Matches(val int) bool
+	Match(val int) bool
 }
 
 type wildcardCronField struct {
 }
 
-func (*wildcardCronField) Matches(val int) bool {
+func (*wildcardCronField) Match(val int) bool {
 	return true
 }
 
@@ -48,7 +48,7 @@ type constantCronField struct {
 	Val int
 }
 
-func (f *constantCronField) Matches(val int) bool {
+func (f *constantCronField) Match(val int) bool {
 	return f.Val == val
 }
 
@@ -57,7 +57,7 @@ type rangeCronField struct {
 	End   int
 }
 
-func (f *rangeCronField) Matches(val int) bool {
+func (f *rangeCronField) Match(val int) bool {
 	return val >= f.Start && val <= f.End
 }
 
@@ -65,9 +65,9 @@ type listCronField struct {
 	Parts []cronField
 }
 
-func (f *listCronField) Matches(val int) bool {
+func (f *listCronField) Match(val int) bool {
 	for _, p := range f.Parts {
-		if p.Matches(val) {
+		if p.Match(val) {
 			return true
 		}
 	}
@@ -75,12 +75,12 @@ func (f *listCronField) Matches(val int) bool {
 	return false
 }
 
-func (c *cronMask) Matches(t time.Time) bool {
-	return c.Minute.Matches(t.Minute()) &&
-		c.Hour.Matches(t.Hour()) &&
-		c.DayOfMonth.Matches(t.Day()) &&
-		c.Month.Matches(int(t.Month())) &&
-		c.DayOfWeek.Matches(int(t.Weekday()))
+func (c *cronMask) Match(t time.Time) bool {
+	return c.Minute.Match(t.Minute()) &&
+		c.Hour.Match(t.Hour()) &&
+		c.DayOfMonth.Match(t.Day()) &&
+		c.Month.Match(int(t.Month())) &&
+		c.DayOfWeek.Match(int(t.Weekday()))
 }
 
 func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
