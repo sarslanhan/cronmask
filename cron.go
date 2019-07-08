@@ -163,16 +163,14 @@ func New(expr string) (*CronMask, error) {
 		return nil, errors.New("invalid cron mask expression. expected 5 fields separated by whitespaces")
 	}
 
-	var fields [5]field
+	var err error
+	var minute, hour, dayOfMonth, month, dayOfWeek field
+	fields := []*field{&minute, &hour, &dayOfMonth, &month, &dayOfWeek}
 	for i, p := range parts {
-		field, err := parseCronField(i, p)
-		if err != nil {
+		if *fields[i], err = parseCronField(i, p); err != nil {
 			return nil, err
 		}
-		fields[i] = field
 	}
-
-	minute, hour, dayOfMonth, month, dayOfWeek := fields[0], fields[1], fields[2], fields[3], fields[4]
 
 	return &CronMask{
 		minute:     minute,
