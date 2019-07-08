@@ -80,18 +80,30 @@ func (f list) match(val int) bool {
 	return false
 }
 
+func validateRange(i, val int) error {
+	validRange := validRanges[i]
+	if validRange.start <= val && validRange.end >= val {
+		return nil
+	}
+
+	return errors.Errorf("expected %d to be in [%d,%d] range", val, validRange.start, validRange.end)
+}
+
+func parseValue(fieldIdx int, raw string) (int, error) {
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, err
+	}
+	if err := validateRange(fieldIdx, parsed); err != nil {
+		return 0, err
+	}
+
+	return parsed, nil
+}
+
 func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 	if fieldStr == "*" {
 		return wildcard{}, nil
-	}
-
-	validateRange := func(i, val int) error {
-		validRange := validRanges[i]
-		if validRange.start <= val && validRange.end >= val {
-			return nil
-		}
-
-		return errors.Errorf("expected %d to be in [%d,%d] range", val, validRange.start, validRange.end)
 	}
 
 	parts := strings.Split(fieldStr, ",")
@@ -103,28 +115,19 @@ func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 		possibleRangeFields := strings.Split(p, "-")
 
 		if len(possibleRangeFields) == 1 {
-			parsed, err := strconv.Atoi(possibleRangeFields[0])
+			parsed, err := parseValue(fieldIdx, possibleRangeFields[0])
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
-			}
-			if err := validateRange(fieldIdx, parsed); err != nil {
-				return nil, err
 			}
 			fields = append(fields, constant{val: parsed})
 		} else if len(possibleRangeFields) == 2 {
-			start, err := strconv.Atoi(possibleRangeFields[0])
+			start, err := parseValue(fieldIdx, possibleRangeFields[0])
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 			}
-			if err := validateRange(fieldIdx, start); err != nil {
-				return nil, err
-			}
-			end, err := strconv.Atoi(possibleRangeFields[1])
+			end, err := parseValue(fieldIdx, possibleRangeFields[1])
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
-			}
-			if err := validateRange(fieldIdx, end); err != nil {
-				return nil, err
 			}
 			fields = append(fields, rangeF{start: start, end: end})
 		} else {
