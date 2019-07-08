@@ -44,7 +44,7 @@ type field interface {
 type wildcard struct {
 }
 
-func (*wildcard) match(val int) bool {
+func (wildcard) match(val int) bool {
 	return true
 }
 
@@ -52,7 +52,7 @@ type constant struct {
 	val int
 }
 
-func (f *constant) match(val int) bool {
+func (f constant) match(val int) bool {
 	return f.val == val
 }
 
@@ -62,7 +62,7 @@ type rangeF struct {
 	end   int
 }
 
-func (f *rangeF) match(val int) bool {
+func (f rangeF) match(val int) bool {
 	return val >= f.start && val <= f.end
 }
 
@@ -70,7 +70,7 @@ type list struct {
 	parts []field
 }
 
-func (f *list) match(val int) bool {
+func (f list) match(val int) bool {
 	for _, p := range f.parts {
 		if p.match(val) {
 			return true
@@ -82,7 +82,7 @@ func (f *list) match(val int) bool {
 
 func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 	if fieldStr == "*" {
-		return &wildcard{}, nil
+		return wildcard{}, nil
 	}
 
 	validateRange := func(i, val int) error {
@@ -110,7 +110,7 @@ func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 			if err := validateRange(fieldIdx, parsed); err != nil {
 				return nil, err
 			}
-			fields = append(fields, &constant{val: parsed})
+			fields = append(fields, constant{val: parsed})
 		} else if len(possibleRangeFields) == 2 {
 			start, err := strconv.Atoi(possibleRangeFields[0])
 			if err != nil {
@@ -126,13 +126,13 @@ func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 			if err := validateRange(fieldIdx, end); err != nil {
 				return nil, err
 			}
-			fields = append(fields, &rangeF{start: start, end: end})
+			fields = append(fields, rangeF{start: start, end: end})
 		} else {
 			return nil, errors.Errorf("could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 		}
 	}
 
-	return &list{parts: fields}, nil
+	return list{parts: fields}, nil
 }
 
 // New constructs a new CronMask instance that can be used to check if a given time.Time
