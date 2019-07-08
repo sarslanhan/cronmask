@@ -26,48 +26,48 @@ type CronMask interface {
 }
 
 type cronMask struct {
-	Minute     cronField
-	Hour       cronField
-	DayOfMonth cronField
-	Month      cronField
-	DayOfWeek  cronField
+	minute     cronField
+	hour       cronField
+	dayOfMonth cronField
+	month      cronField
+	dayOfWeek  cronField
 }
 
 type cronField interface {
-	Match(val int) bool
+	match(val int) bool
 }
 
 type wildcardCronField struct {
 }
 
-func (*wildcardCronField) Match(val int) bool {
+func (*wildcardCronField) match(val int) bool {
 	return true
 }
 
 type constantCronField struct {
-	Val int
+	val int
 }
 
-func (f *constantCronField) Match(val int) bool {
-	return f.Val == val
+func (f *constantCronField) match(val int) bool {
+	return f.val == val
 }
 
 type rangeCronField struct {
-	Start int
-	End   int
+	start int
+	end   int
 }
 
-func (f *rangeCronField) Match(val int) bool {
-	return val >= f.Start && val <= f.End
+func (f *rangeCronField) match(val int) bool {
+	return val >= f.start && val <= f.end
 }
 
 type listCronField struct {
-	Parts []cronField
+	parts []cronField
 }
 
-func (f *listCronField) Match(val int) bool {
-	for _, p := range f.Parts {
-		if p.Match(val) {
+func (f *listCronField) match(val int) bool {
+	for _, p := range f.parts {
+		if p.match(val) {
 			return true
 		}
 	}
@@ -76,11 +76,11 @@ func (f *listCronField) Match(val int) bool {
 }
 
 func (c *cronMask) Match(t time.Time) bool {
-	return c.Minute.Match(t.Minute()) &&
-		c.Hour.Match(t.Hour()) &&
-		c.DayOfMonth.Match(t.Day()) &&
-		c.Month.Match(int(t.Month())) &&
-		c.DayOfWeek.Match(int(t.Weekday()))
+	return c.minute.match(t.Minute()) &&
+		c.hour.match(t.Hour()) &&
+		c.dayOfMonth.match(t.Day()) &&
+		c.month.match(int(t.Month())) &&
+		c.dayOfWeek.match(int(t.Weekday()))
 }
 
 func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
@@ -113,7 +113,7 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 			if err := validateRange(fieldIdx, parsed); err != nil {
 				return nil, err
 			}
-			fields = append(fields, &constantCronField{Val: parsed})
+			fields = append(fields, &constantCronField{val: parsed})
 		} else if len(possibleRangeFields) == 2 {
 			start, err := strconv.Atoi(possibleRangeFields[0])
 			if err != nil {
@@ -129,13 +129,13 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 			if err := validateRange(fieldIdx, end); err != nil {
 				return nil, err
 			}
-			fields = append(fields, &rangeCronField{Start: start, End: end})
+			fields = append(fields, &rangeCronField{start: start, end: end})
 		} else {
 			return nil, errors.Errorf("could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 		}
 	}
 
-	return &listCronField{Parts: fields}, nil
+	return &listCronField{parts: fields}, nil
 }
 
 // New constructs a new CronMask instance that can be used to check if a given time.Time
@@ -175,10 +175,10 @@ func New(expr string) (CronMask, error) {
 	minute, hour, dayOfMonth, month, dayOfWeek := fields[0], fields[1], fields[2], fields[3], fields[4]
 
 	return &cronMask{
-		Minute:     minute,
-		Hour:       hour,
-		DayOfMonth: dayOfMonth,
-		Month:      month,
-		DayOfWeek:  dayOfWeek,
+		minute:     minute,
+		hour:       hour,
+		dayOfMonth: dayOfMonth,
+		month:      month,
+		dayOfWeek:  dayOfWeek,
 	}, nil
 }
