@@ -26,46 +26,47 @@ type CronMask interface {
 }
 
 type cronMask struct {
-	minute     cronField
-	hour       cronField
-	dayOfMonth cronField
-	month      cronField
-	dayOfWeek  cronField
+	minute     field
+	hour       field
+	dayOfMonth field
+	month      field
+	dayOfWeek  field
 }
 
-type cronField interface {
+type field interface {
 	match(val int) bool
 }
 
-type wildcardCronField struct {
+type wildcard struct {
 }
 
-func (*wildcardCronField) match(val int) bool {
+func (*wildcard) match(val int) bool {
 	return true
 }
 
-type constantCronField struct {
+type constant struct {
 	val int
 }
 
-func (f *constantCronField) match(val int) bool {
+func (f *constant) match(val int) bool {
 	return f.val == val
 }
 
-type rangeCronField struct {
+// range is a reserved keyword
+type rangeF struct {
 	start int
 	end   int
 }
 
-func (f *rangeCronField) match(val int) bool {
+func (f *rangeF) match(val int) bool {
 	return val >= f.start && val <= f.end
 }
 
-type listCronField struct {
-	parts []cronField
+type list struct {
+	parts []field
 }
 
-func (f *listCronField) match(val int) bool {
+func (f *list) match(val int) bool {
 	for _, p := range f.parts {
 		if p.match(val) {
 			return true
@@ -83,9 +84,9 @@ func (c *cronMask) Match(t time.Time) bool {
 		c.dayOfWeek.match(int(t.Weekday()))
 }
 
-func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
+func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 	if fieldStr == "*" {
-		return &wildcardCronField{}, nil
+		return &wildcard{}, nil
 	}
 
 	validateRange := func(i, val int) error {
@@ -98,7 +99,7 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 	}
 
 	parts := strings.Split(fieldStr, ",")
-	fields := make([]cronField, 0, len(parts))
+	fields := make([]field, 0, len(parts))
 	for _, p := range parts {
 		if p == "" {
 			return nil, errors.Errorf("could not parse the cron field: %s. invalid list item: %s", fieldStr, p)
@@ -113,7 +114,7 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 			if err := validateRange(fieldIdx, parsed); err != nil {
 				return nil, err
 			}
-			fields = append(fields, &constantCronField{val: parsed})
+			fields = append(fields, &constant{val: parsed})
 		} else if len(possibleRangeFields) == 2 {
 			start, err := strconv.Atoi(possibleRangeFields[0])
 			if err != nil {
@@ -129,13 +130,13 @@ func parseCronField(fieldIdx int, fieldStr string) (cronField, error) {
 			if err := validateRange(fieldIdx, end); err != nil {
 				return nil, err
 			}
-			fields = append(fields, &rangeCronField{start: start, end: end})
+			fields = append(fields, &rangeF{start: start, end: end})
 		} else {
 			return nil, errors.Errorf("could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 		}
 	}
 
-	return &listCronField{parts: fields}, nil
+	return &list{parts: fields}, nil
 }
 
 // New constructs a new CronMask instance that can be used to check if a given time.Time
@@ -163,7 +164,7 @@ func New(expr string) (CronMask, error) {
 		return nil, errors.New("invalid cron mask expression. expected 5 fields separated by whitespaces")
 	}
 
-	var fields [5]cronField
+	var fields [5]field
 	for i, p := range parts {
 		field, err := parseCronField(i, p)
 		if err != nil {
