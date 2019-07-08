@@ -21,16 +21,20 @@ var (
 
 // CronMask interface exposes a method to check whether the
 // given time.Time matches the expression CronMask was constructed with.
-type CronMask interface {
-	Match(t time.Time) bool
-}
-
-type cronMask struct {
+type CronMask struct {
 	minute     field
 	hour       field
 	dayOfMonth field
 	month      field
 	dayOfWeek  field
+}
+
+func (c *CronMask) Match(t time.Time) bool {
+	return c.minute.match(t.Minute()) &&
+		c.hour.match(t.Hour()) &&
+		c.dayOfMonth.match(t.Day()) &&
+		c.month.match(int(t.Month())) &&
+		c.dayOfWeek.match(int(t.Weekday()))
 }
 
 type field interface {
@@ -74,14 +78,6 @@ func (f *list) match(val int) bool {
 	}
 
 	return false
-}
-
-func (c *cronMask) Match(t time.Time) bool {
-	return c.minute.match(t.Minute()) &&
-		c.hour.match(t.Hour()) &&
-		c.dayOfMonth.match(t.Day()) &&
-		c.month.match(int(t.Month())) &&
-		c.dayOfWeek.match(int(t.Weekday()))
 }
 
 func parseCronField(fieldIdx int, fieldStr string) (field, error) {
@@ -157,7 +153,7 @@ func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 // - Command section
 //
 // - Text representation of the fields "month" and "day of week"
-func New(expr string) (CronMask, error) {
+func New(expr string) (*CronMask, error) {
 	parts := strings.Fields(expr)
 
 	if len(parts) != 5 {
@@ -175,7 +171,7 @@ func New(expr string) (CronMask, error) {
 
 	minute, hour, dayOfMonth, month, dayOfWeek := fields[0], fields[1], fields[2], fields[3], fields[4]
 
-	return &cronMask{
+	return &CronMask{
 		minute:     minute,
 		hour:       hour,
 		dayOfMonth: dayOfMonth,
