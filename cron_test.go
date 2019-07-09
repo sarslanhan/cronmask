@@ -204,7 +204,7 @@ func TestNewCronMask(t *testing.T) {
 			continue
 		}
 
-		if result := cron.Matches(ts); result != tc.matches {
+		if result := cron.Match(ts); result != tc.matches {
 			t.Errorf("Expected result [%v] but got [%v] for expression %s and timestamp %s", tc.matches, result, tc.expr, tc.ts)
 		}
 	}
