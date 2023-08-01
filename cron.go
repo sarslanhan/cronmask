@@ -1,7 +1,8 @@
 package cronmask
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -86,7 +87,7 @@ func validateRange(i, val int) error {
 		return nil
 	}
 
-	return errors.Errorf("expected %d to be in [%d,%d] range", val, validRange.start, validRange.end)
+	return fmt.Errorf("expected %d to be in [%d,%d] range", val, validRange.start, validRange.end)
 }
 
 func parseValue(fieldIdx int, raw string) (int, error) {
@@ -110,28 +111,28 @@ func parseCronField(fieldIdx int, fieldStr string) (field, error) {
 	fields := make([]field, 0, len(parts))
 	for _, p := range parts {
 		if p == "" {
-			return nil, errors.Errorf("could not parse the cron field: %s. invalid list item: %s", fieldStr, p)
+			return nil, fmt.Errorf("could not parse the cron field: %s. invalid list item: %s", fieldStr, p)
 		}
 		possibleRangeFields := strings.Split(p, "-")
 
 		if len(possibleRangeFields) == 1 {
 			parsed, err := parseValue(fieldIdx, possibleRangeFields[0])
 			if err != nil {
-				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
+				return nil, fmt.Errorf("could not parse cron field: %s. invalid list item: %s: %w", fieldStr, p, err)
 			}
 			fields = append(fields, constant{val: parsed})
 		} else if len(possibleRangeFields) == 2 {
 			start, err := parseValue(fieldIdx, possibleRangeFields[0])
 			if err != nil {
-				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
+				return nil, fmt.Errorf("could not parse cron field: %s. invalid list item: %s: %w", fieldStr, p, err)
 			}
 			end, err := parseValue(fieldIdx, possibleRangeFields[1])
 			if err != nil {
-				return nil, errors.Wrapf(err, "could not parse cron field: %s. invalid list item: %s", fieldStr, p)
+				return nil, fmt.Errorf("could not parse cron field: %s. invalid list item: %s: %w", fieldStr, p, err)
 			}
 			fields = append(fields, rangeF{start: start, end: end})
 		} else {
-			return nil, errors.Errorf("could not parse cron field: %s. invalid list item: %s", fieldStr, p)
+			return nil, fmt.Errorf("could not parse cron field: %s. invalid list item: %s", fieldStr, p)
 		}
 	}
 
